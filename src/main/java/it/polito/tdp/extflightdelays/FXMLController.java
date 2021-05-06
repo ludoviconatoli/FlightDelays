@@ -1,6 +1,7 @@
 package it.polito.tdp.extflightdelays;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.extflightdelays.model.Airport;
@@ -42,6 +43,8 @@ public class FXMLController {
 
     @FXML
     void doAnalizzaAeroporti(ActionEvent event) {
+    	txtResult.clear();
+    	
     	int x;
     	try {
     		x = Integer.parseInt(compagnieMinimo.getText());  				
@@ -58,7 +61,24 @@ public class FXMLController {
 
     @FXML
     void doTestConnessione(ActionEvent event) {
-
+    	txtResult.clear();
+    	Airport a1 = cmbBoxAeroportoPartenza.getValue();
+    	if(a1 == null) {
+    		txtResult.setText("Seleziona un aeroporto di partenza");
+    		return;
+    	}
+    	
+    	Airport a2 = cmbBoxAeroportoDestinazione.getValue();
+    	if(a2 == null) {
+    		txtResult.setText("Seleziona un aeroporto di destinazione");
+    	}
+    	
+    	List<Airport> percorso = model.trovaPercorso(a1, a2);
+    	
+    	if(percorso == null) {
+    		txtResult.appendText(a1 + " e " + a2 + " sono collegati dal seguente percorso: \n\n");
+    		txtResult.appendText(percorso.toString());
+    	}
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete

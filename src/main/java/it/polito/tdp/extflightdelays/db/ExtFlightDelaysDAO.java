@@ -58,6 +58,8 @@ public class ExtFlightDelaysDAO {
 				}
 			}
 
+			rs.close();
+			st.close();
 			conn.close();
 
 		} catch (SQLException e) {
@@ -86,6 +88,8 @@ public class ExtFlightDelaysDAO {
 				result.add(flight);
 			}
 
+			rs.close();
+			st.close();
 			conn.close();
 			return result;
 
@@ -96,9 +100,9 @@ public class ExtFlightDelaysDAO {
 		}
 	}
 	
-	public List<Airport> getVertici(Map<Integer, Airport> idMap, int x){
-		String sql = "SELECT a.id "
-				+ "FROM airports a, flights "
+	public List<Airport> getVertici(int x, Map<Integer, Airport> idMap){
+		String sql = "SELECT a.id as id_vertice "
+				+ "FROM airports a, flights f "
 				+ "WHERE (a.id = f.ORIGIN_AIRPORT_ID OR a.id = f.DESTINATION_AIRPORT_ID) "
 				+ "GROUP BY a.id "
 				+ "HAVING COUNT(DISTINCT (f.AIRLINE_ID)) > ?";
@@ -111,7 +115,7 @@ public class ExtFlightDelaysDAO {
 			
 			ResultSet rs = st.executeQuery();
 			while(rs.next()) {
-				result.add(idMap.get(rs.getInt("a.id")));
+				result.add(idMap.get(rs.getInt("id_vertice")));
 				
 			}
 			rs.close();
@@ -119,7 +123,7 @@ public class ExtFlightDelaysDAO {
 			conn.close();
 			return result;
 		}catch(SQLException e) {
-			System.out.println("Errore");
+			System.out.println("Errore in getVertici()");
 		}
 		return result;
 	}
@@ -153,7 +157,7 @@ public class ExtFlightDelaysDAO {
 			return result;
 			
 		}catch(SQLException e) {
-			System.out.println("Errore");
+			System.out.println("Errore getRotte()");
 		}
 		return result;
 	}

@@ -27,7 +27,7 @@ public class Model {
 	
 	public Model() {
 		dao = new ExtFlightDelaysDAO();
-		idMap = new HashMap<>();
+		idMap = new HashMap<Integer, Airport>();
 		dao.loadAllAirports(idMap);
 	}
 	
@@ -35,13 +35,13 @@ public class Model {
 		grafo = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 		
 		//aggiungo vertici filtrati
-		Graphs.addAllVertices(grafo, dao.getVertici(idMap, x));
+		Graphs.addAllVertices(grafo, dao.getVertici(x, idMap));
 		for(Rotta r: dao.getRotte(idMap)) {
 			if(this.grafo.containsVertex(r.getA1()) && this.grafo.containsVertex(r.getA2())){
 				DefaultWeightedEdge e = this.grafo.getEdge(r.getA1(), r.getA2());
 				if(e == null) {
 					//non c'è ancora l'arco tra i nodi
-					Graphs.addEdge(grafo, r.getA1(), r.getA2(), r.getN());
+					Graphs.addEdgeWithVertices(grafo, r.getA1(), r.getA2(), r.getN());
 				}else {
 					double pesoVecchio = this.grafo.getEdgeWeight(e);
 					double pesoNuovo = pesoVecchio + r.getN();
@@ -57,7 +57,25 @@ public class Model {
 	}
 
 	public Set<Airport> getVertici() {
-		return this.grafo.vertexSet();
+		if(grafo != null)
+			return this.grafo.vertexSet();
+		
+		return null;
+	}
+	
+	public int getNVertici() {
+		if(grafo != null)
+			return grafo.vertexSet().size();
+		
+		return 0;
+	}
+	
+	public int getNArchi() {
+		if(grafo != null) {
+			return grafo.edgeSet().size();
+		}
+		
+		return 0;
 	}
 	
 	public List<Airport> trovaPercorso(Airport a1, Airport a2){
@@ -84,13 +102,13 @@ public class Model {
 			@Override
 			//Ci salviamo le visite
 			public void edgeTraversed(EdgeTraversalEvent<DefaultWeightedEdge> e) {
-				Airport a3 = grafo.getEdgeSource(e.getEdge());
-				Airport a4 = grafo.getEdgeTarget(e.getEdge());
+				Airport airport1 = grafo.getEdgeSource(e.getEdge());
+				Airport airport2 = grafo.getEdgeTarget(e.getEdge());
 				
-				if(visita.containsKey(a3) && !visita.containsKey(a4)) {
-					visita.put(a4, a3);
-				}else if(visita.containsKey(a4) && !visita.containsKey(a3)) {
-					visita.put(a3, a4);
+				if(visita.containsKey(airport1) && !visita.containsKey(airport2)) {
+					visita.put(airport2, airport1);
+				}else if(visita.containsKey(airport2) && !visita.containsKey(airport1)) {
+					visita.put(airport1, airport2);
 				}
 				
 				
@@ -114,12 +132,18 @@ public class Model {
 			it.next();
 		}
 		
+		//se uno dei due aeroporti non è presente nell'albero di visita
+		//   -> non c'è nessun percorso
+		if(!visita.containsKey(a1) || !visita.containsKey(a2)) {
+			return null;
+		}
+		
 		percorso.add(a2);
 		Airport step = a2;
 		
 		while(visita.get(step) != null) {
 			step = visita.get(step);
-			percorso.add(step);
+			percorso.add(0, step);
 		}
 		
 		return percorso;
